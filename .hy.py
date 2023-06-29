@@ -495,7 +495,38 @@ async def salut(ctx):
 #member.guild.member_count
 #datetime.datetime.utcnow
 
+@bot.command()
+async def rank(ctx, member: discord.Member = None):
+    if not member:
+        id = ctx.message.author.id
+        with open('level.json', 'r') as f:
+            users = json.load(f)
+        
 
+        
+        lvl = users[str(id)]['level']
+        exp = users[str(id)]['experience']
+        expd = lvl ** 3
+        lvlf = lvl + 1
+        expf = lvlf ** 3
+        expl = expf - expd
+        usep = exp - expd
+        enb = discord.Embed(title= "level", description="commande pour le niveaux", color=discord.Color.random())
+        enb.add_field(name="le niveau", value=f"{lvl}")
+        enb.add_field(name="progression", value=f"{usep} / {expl} xp")
+        enb.add_field(name="experience", value=f"{exp} xp total")
+        
+        
+        await ctx.send(embed = enb)
+        
+    else:
+        id = member.id
+        with open('level.json', 'r') as f:
+            users = json.load(f)
+        lvl = users[str(id)]['level']
+        exp = users[str(id)]['experience']
+        await ctx.send(f'{member} a le niveau {lvl}!')
+        await ctx.send(f'sont xp est de {exp}')
 
 
 bot.run("TOKEN")
