@@ -275,7 +275,223 @@ async def pick(ctx):
 async def salut(ctx):
     await ctx.reply("salut")
 
+"""
+@bot.event
+async def on_message(message):
+    with open("oleveling.json", "r") as f:
+        data = json.load(f)
+        
+        if str(message.author.id) in data:
+            xp = data[str(message.author.id)]["xp"]
+            lvl = data[str(message.author.id)]["level"]
+            increased_xp = xp+25
+            new_level = int(increased_xp/100)
+            data[str(message.author.id)]["xp"] = increased_xp
+            with open("oleveling.json", "w") as f:
+                json.dump(data, f)
+                if new_level > lvl:
+                    await message.channel.send(f"{message.author.mention} vient de passer au niveau {new_level}")
+                    data[str(message.author.id)]["level"] = new_level
+                    data[str(message.author.id)]["xp"] = 0
+                    with open("oleveling.json", "w") as f:
+                        json.dump(data, f)
 
+        
+        else:
+            data[str(message.author.id)] = {}
+            data[str(message.author.id)]["xp"] = 0
+            data[str(message.author.id)]["level"] = 1
+
+"""  
+@bot.event
+async def on_message(message):
+    if message.author.bot == False:
+        with open('level.json', 'r') as f:
+            users = json.load(f)
+        
+        gain = [25, 30, 35, 40, 45, 50]
+        ajj = random.choice(gain)
+
+        await update_data(users, message.author)
+        await add_experience(users, message.author, ajj)
+        await level_up(users, message.author, message)
+
+        with open('level.json', 'w') as f:
+            json.dump(users, f)
+
+    await bot.process_commands(message)
+
+
+async def update_data(users, user):
+    if not f'{user.id}' in users:
+        users[f'{user.id}'] = {}
+        users[f'{user.id}']['experience'] = 0
+        users[f'{user.id}']['level'] = 1
+
+
+async def add_experience(users, user, exp):
+    users[f'{user.id}']['experience'] += exp
+
+
+async def level_up(users, user, message):
+    with open('level.json', 'r') as g:
+        levels = json.load(g)
+    experience = users[f'{user.id}']['experience']
+    lvl_start = users[f'{user.id}']['level']
+    lvl_end = int(experience ** (1 / 3))
+    if lvl_start < lvl_end:
+        await message.channel.send(f'{user.mention} vient de passer au niveau  {lvl_end}')
+        users[f'{user.id}']['level'] = lvl_end
+
+
+  
+@bot.command()
+async def rank(ctx, member: discord.Member = None):
+    if not member:
+        id = ctx.message.author.id
+        with open('level.json', 'r') as f:
+            users = json.load(f)
+        
+
+        
+        lvl = users[str(id)]['level']
+        exp = users[str(id)]['experience']
+        enb = discord.Embed(title="lvl", description="commande pour le niveaux", color=discord.Color.random())
+        enb.add_field(name="le niveau", value=f"{lvl}")
+        enb.add_field(name="experience", value=f"{exp}")
+        await ctx.send(embed = enb)
+        
+    else:
+        id = member.id
+        with open('level.json', 'r') as f:
+            users = json.load(f)
+        lvl = users[str(id)]['level']
+        exp = users[str(id)]['experience']
+        await ctx.send(f'{member} a le niveau {lvl}!')
+        await ctx.send(f'sont xp est de {exp}')
+
+
+
+
+@bot.command()
+async def topxp(ctx, x=10):
+  with open('level.json', 'r') as f:
+    
+    users = json.load(f)
+    
+  leaderboard = {}
+  total=[]
+  
+  for user in list(users):
+    name = int(user)
+    total_amt = users[str(user)]['experience']
+    leaderboard[total_amt] = name
+    total.append(total_amt)
+
+    
+
+    
+
+  total = sorted(total,reverse=True)
+  
+
+  emb = discord.Embed(
+    title = f'Top {x} des plus haut niveau sur le serveur de octive',
+    description = 'les plus haut niveau',
+    color=discord.Color.random()
+  )
+  
+  index = 1
+  for amt in total:
+    id_ = leaderboard[amt]
+    member = bot.get_user(id_)
+    
+    
+    emb.add_field(name = f'{index}: {member}', value = f'{amt}', inline=False)
+    
+    
+    if index == x:
+      break
+    else:
+      index += 1
+      
+  await ctx.send(embed = emb)
+
+
+
+
+@bot.command()
+async def level(ctx, x=10):
+  with open('level.json', 'r') as f:
+    
+    users = json.load(f)
+    
+  leaderboard = {}
+  total=[]
+  
+  for user in list(users):
+    name = int(user)
+    total_amt = users[str(user)]['level']
+    leaderboard[total_amt] = name
+    total.append(total_amt)
+
+    
+
+    
+
+  total = sorted(total,reverse=True)
+  
+
+  em = discord.Embed(
+    title = f'Top {x} des plus haut niveau sur le serveur de octive',
+    description = 'les plus haut niveau',
+    color=discord.Color.random()
+  )
+  
+  index = 1
+  for amt in total:
+    id_ = leaderboard[amt]
+    member = bot.get_user(id_)
+    
+    
+    em.add_field(name = f'{index}: {member}', value = f'{amt}', inline=False)
+    
+    
+    if index == x:
+      break
+    else:
+      index += 1
+      
+  await ctx.send(embed = em)
+
+@bot.command
+@commands.has_permissions(ban_members = True)
+async def givexp(user, int):
+    await user[str(user)]['experience'] + int
+
+
+@bot.command
+@commands.has_permissions(ban_members = True)
+async def removexp(user, int):
+    await user[str(user)]['experience'] - int
+
+
+@bot.command()
+@commands.is_owner()
+async def pick(ctx):
+    choisir = ["1", "2", "3"]
+    await ctx.send(random.choice(choisir))
+
+
+
+
+@bot.command()
+async def salut(ctx):
+    await ctx.reply("salut")
+
+
+#member.guild.member_count
+#datetime.datetime.utcnow
 #member.guild.member_count
 #datetime.datetime.utcnow
 
